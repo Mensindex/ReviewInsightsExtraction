@@ -1,0 +1,9 @@
+torch
+numpy
+matplotlib
+pandas
+Pillow
+pycocotools
+requests
+openai
+python-dotenv
