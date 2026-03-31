@@ -1,0 +1,32 @@
+# Dockerfile.local
+# Используем легкий официальный образ Python (он поддерживает Apple Silicon нативно)
+FROM python:3.10-slim
+
+# Настройки среды
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+
+WORKDIR /app
+
+# Устанавливаем системные зависимости (gcc нужен для сборки некоторых python-пакетов)
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+# Копируем зависимости
+COPY requirements.txt .
+
+# Устанавливаем зависимости.
+# ВАЖНО: Мы НЕ ставим здесь bitsandbytes принудительно, так как на Маке он не нужен для Mock-режима.
+RUN pip install --upgrade pip && \
+    pip install -r requirements.txt
+
+# Копируем код
+COPY app /app/app
+# Папку models копируем, но она не будет загружаться в память в Mock-режиме
+COPY models /app/models
+
+EXPOSE 8000
+
+# Запускаем приложение
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
